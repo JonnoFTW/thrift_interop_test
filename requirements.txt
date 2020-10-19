@@ -1,0 +1,4 @@
+cython
+thriftpy2>=0.4.12
+thrift>=0.13.0
+pytest
