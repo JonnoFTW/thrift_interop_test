@@ -15,6 +15,8 @@ from thrift.server import TServer
 
 import thriftpy2
 from thriftpy2.protocol import TApacheJSONProtocolFactory, TCompactProtocolFactory
+from thriftpy2.protocol import TCyBinaryProtocolFactory, TBinaryProtocolFactory
+from thriftpy2.transport import TCyBufferedTransportFactory
 from thriftpy2.transport.buffered import TBufferedTransportFactory
 from thriftpy2.protocol.binary import TBinaryProtocolFactory
 
@@ -37,7 +39,9 @@ def recursive_vars(obj):
         return obj
     if isinstance(obj, dict):
         return {k: recursive_vars(v) for k, v in obj.items()}
-    if isinstance(obj, (list, set)):
+    if isinstance(obj, list):
+        return [recursive_vars(v) for v in obj]
+    if isinstance(obj, set):
         return [recursive_vars(v) for v in obj]
     if hasattr(obj, '__dict__'):
         return recursive_vars(vars(obj))
@@ -84,7 +88,10 @@ def make_data(bar_cls, foo_cls):
         },
         tbinary=b"\x01\x0fabc123\x00\x02",
         tmap_of_bool2str={True: "true string", False: "false string"},
-        tmap_of_bool2int={True: 0, False: 1}
+        tmap_of_bool2int={True: 0, False: 1},
+        tbin2bin={b'Binary': b'data'},
+        tset_of_binary={b'bin one', b'bin two'},
+        tlist_of_binary=[b'foo roo', b'baz boo'],
     )
 
 
@@ -101,6 +108,7 @@ class Handler:
 protocols = [
     (TApacheJSONProtocolFactory, T_TJSONProtocolFactory),
     (TBinaryProtocolFactory, T_TBinaryProtocolFactory),
+    (TCyBinaryProtocolFactory, T_TBinaryProtocolFactory),
     (TCompactProtocolFactory, T_TCompactProtocolFactory),
 ]
 
@@ -134,12 +142,13 @@ def thrift_client(**kwargs):
 
 def thriftpy2_server(**kwargs):
     from thriftpy2.rpc import make_server
+    trans_factory = TBufferedTransportFactory if kwargs['tp2_prot'] == TBinaryProtocolFactory else TCyBufferedTransportFactory
     server = make_server(
         service=test_thrift.BarService,
         handler=Handler(),
         host='localhost',
         proto_factory=kwargs['tp2_prot'](),
-        trans_factory=TBufferedTransportFactory()
+        trans_factory=trans_factory()
     )
     print("Starting thriftpy2 server with", kwargs['tp2_prot'])
     server.serve()
@@ -147,11 +156,13 @@ def thriftpy2_server(**kwargs):
 
 def thriftpy2_client(**kwargs):
     from thriftpy2.rpc import make_client
+    trans_factory = TBufferedTransportFactory if kwargs[
+                                                     'tp2_prot'] == TBinaryProtocolFactory else TCyBufferedTransportFactory
     client = make_client(
         test_thrift.BarService,
         'localhost',
         proto_factory=kwargs['tp2_prot'](),
-        trans_factory=TBufferedTransportFactory()
+        trans_factory=trans_factory()
     )
     result = client.test(tp2_object)
     print("\n", result)
@@ -166,7 +177,7 @@ def thriftpy2_client(**kwargs):
 def test_client_server(protos, server_fn, client_fn):
     kw = {
         'tp2_prot': protos[0],
-        'th_prot': protos[1]
+        'th_prot': protos[1],
     }
     proc = Process(target=server_fn, kwargs=kw)
     proc.start()
@@ -180,8 +191,10 @@ def test_client_server(protos, server_fn, client_fn):
 
 if __name__ == "__main__":
     import sys
-    tp2_prot = TBinaryProtocolFactory
-    th_prot = T_TBinaryProtocolFactory
+    # tp2_prot = TCyBinaryProtocolFactory
+    # th_prot = T_TBinaryProtocolFactory
+    tp2_prot = TApacheJSONProtocolFactory
+    th_prot = T_TJSONProtocolFactory
     {
         'tp2': lambda: thriftpy2_server(tp2_prot=tp2_prot),
         'th': lambda: thrift_server(th_prot=th_prot),
