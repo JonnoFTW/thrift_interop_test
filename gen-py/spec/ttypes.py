@@ -157,11 +157,14 @@ class Bar(object):
      - tbinary
      - tmap_of_bool2str
      - tmap_of_bool2int
+     - tlist_of_binary
+     - tset_of_binary
+     - tbin2bin
 
     """
 
 
-    def __init__(self, tbool=None, tbyte=None, tshort=None, tint=None, tlong=None, tdouble=None, tstr=None, tlist_of_strings=None, tmap_of_int2str=None, tsetofints=None, tmap_of_str2foo=None, tmap_of_str2stringlist=None, tmap_of_str2mapofstring2foo=None, tlist_of_foo=None, tfoo=None, tlist_of_maps2int=None, tmap_of_str2foolist=None, tmap_of_int2foo=None, tbinary=None, tmap_of_bool2str=None, tmap_of_bool2int=None,):
+    def __init__(self, tbool=None, tbyte=None, tshort=None, tint=None, tlong=None, tdouble=None, tstr=None, tlist_of_strings=None, tmap_of_int2str=None, tsetofints=None, tmap_of_str2foo=None, tmap_of_str2stringlist=None, tmap_of_str2mapofstring2foo=None, tlist_of_foo=None, tfoo=None, tlist_of_maps2int=None, tmap_of_str2foolist=None, tmap_of_int2foo=None, tbinary=None, tmap_of_bool2str=None, tmap_of_bool2int=None, tlist_of_binary=None, tset_of_binary=None, tbin2bin=None,):
         self.tbool = tbool
         self.tbyte = tbyte
         self.tshort = tshort
@@ -183,6 +186,9 @@ class Bar(object):
         self.tbinary = tbinary
         self.tmap_of_bool2str = tmap_of_bool2str
         self.tmap_of_bool2int = tmap_of_bool2int
+        self.tlist_of_binary = tlist_of_binary
+        self.tset_of_binary = tset_of_binary
+        self.tbin2bin = tbin2bin
 
     def read(self, iprot):
         if iprot._fast_decode is not None and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None:
@@ -394,6 +400,37 @@ class Bar(object):
                     iprot.readMapEnd()
                 else:
                     iprot.skip(ftype)
+            elif fid == 22:
+                if ftype == TType.LIST:
+                    self.tlist_of_binary = []
+                    (_etype109, _size106) = iprot.readListBegin()
+                    for _i110 in range(_size106):
+                        _elem111 = iprot.readBinary()
+                        self.tlist_of_binary.append(_elem111)
+                    iprot.readListEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 23:
+                if ftype == TType.SET:
+                    self.tset_of_binary = set()
+                    (_etype115, _size112) = iprot.readSetBegin()
+                    for _i116 in range(_size112):
+                        _elem117 = iprot.readBinary()
+                        self.tset_of_binary.add(_elem117)
+                    iprot.readSetEnd()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 24:
+                if ftype == TType.MAP:
+                    self.tbin2bin = {}
+                    (_ktype119, _vtype120, _size118) = iprot.readMapBegin()
+                    for _i122 in range(_size118):
+                        _key123 = iprot.readBinary()
+                        _val124 = iprot.readBinary()
+                        self.tbin2bin[_key123] = _val124
+                    iprot.readMapEnd()
+                else:
+                    iprot.skip(ftype)
             else:
                 iprot.skip(ftype)
             iprot.readFieldEnd()
@@ -435,61 +472,61 @@ class Bar(object):
         if self.tlist_of_strings is not None:
             oprot.writeFieldBegin('tlist_of_strings', TType.LIST, 8)
             oprot.writeListBegin(TType.STRING, len(self.tlist_of_strings))
-            for iter106 in self.tlist_of_strings:
-                oprot.writeString(iter106.encode('utf-8') if sys.version_info[0] == 2 else iter106)
+            for iter125 in self.tlist_of_strings:
+                oprot.writeString(iter125.encode('utf-8') if sys.version_info[0] == 2 else iter125)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.tmap_of_int2str is not None:
             oprot.writeFieldBegin('tmap_of_int2str', TType.MAP, 9)
             oprot.writeMapBegin(TType.I32, TType.STRING, len(self.tmap_of_int2str))
-            for kiter107, viter108 in self.tmap_of_int2str.items():
-                oprot.writeI32(kiter107)
-                oprot.writeString(viter108.encode('utf-8') if sys.version_info[0] == 2 else viter108)
+            for kiter126, viter127 in self.tmap_of_int2str.items():
+                oprot.writeI32(kiter126)
+                oprot.writeString(viter127.encode('utf-8') if sys.version_info[0] == 2 else viter127)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.tsetofints is not None:
             oprot.writeFieldBegin('tsetofints', TType.SET, 10)
             oprot.writeSetBegin(TType.I32, len(self.tsetofints))
-            for iter109 in self.tsetofints:
-                oprot.writeI32(iter109)
+            for iter128 in self.tsetofints:
+                oprot.writeI32(iter128)
             oprot.writeSetEnd()
             oprot.writeFieldEnd()
         if self.tmap_of_str2foo is not None:
             oprot.writeFieldBegin('tmap_of_str2foo', TType.MAP, 11)
             oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.tmap_of_str2foo))
-            for kiter110, viter111 in self.tmap_of_str2foo.items():
-                oprot.writeString(kiter110.encode('utf-8') if sys.version_info[0] == 2 else kiter110)
-                viter111.write(oprot)
+            for kiter129, viter130 in self.tmap_of_str2foo.items():
+                oprot.writeString(kiter129.encode('utf-8') if sys.version_info[0] == 2 else kiter129)
+                viter130.write(oprot)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.tmap_of_str2stringlist is not None:
             oprot.writeFieldBegin('tmap_of_str2stringlist', TType.MAP, 12)
             oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.tmap_of_str2stringlist))
-            for kiter112, viter113 in self.tmap_of_str2stringlist.items():
-                oprot.writeString(kiter112.encode('utf-8') if sys.version_info[0] == 2 else kiter112)
-                oprot.writeListBegin(TType.STRING, len(viter113))
-                for iter114 in viter113:
-                    oprot.writeString(iter114.encode('utf-8') if sys.version_info[0] == 2 else iter114)
+            for kiter131, viter132 in self.tmap_of_str2stringlist.items():
+                oprot.writeString(kiter131.encode('utf-8') if sys.version_info[0] == 2 else kiter131)
+                oprot.writeListBegin(TType.STRING, len(viter132))
+                for iter133 in viter132:
+                    oprot.writeString(iter133.encode('utf-8') if sys.version_info[0] == 2 else iter133)
                 oprot.writeListEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.tmap_of_str2mapofstring2foo is not None:
             oprot.writeFieldBegin('tmap_of_str2mapofstring2foo', TType.MAP, 13)
             oprot.writeMapBegin(TType.STRING, TType.MAP, len(self.tmap_of_str2mapofstring2foo))
-            for kiter115, viter116 in self.tmap_of_str2mapofstring2foo.items():
-                oprot.writeString(kiter115.encode('utf-8') if sys.version_info[0] == 2 else kiter115)
-                oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(viter116))
-                for kiter117, viter118 in viter116.items():
-                    oprot.writeString(kiter117.encode('utf-8') if sys.version_info[0] == 2 else kiter117)
-                    viter118.write(oprot)
+            for kiter134, viter135 in self.tmap_of_str2mapofstring2foo.items():
+                oprot.writeString(kiter134.encode('utf-8') if sys.version_info[0] == 2 else kiter134)
+                oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(viter135))
+                for kiter136, viter137 in viter135.items():
+                    oprot.writeString(kiter136.encode('utf-8') if sys.version_info[0] == 2 else kiter136)
+                    viter137.write(oprot)
                 oprot.writeMapEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.tlist_of_foo is not None:
             oprot.writeFieldBegin('tlist_of_foo', TType.LIST, 14)
             oprot.writeListBegin(TType.STRUCT, len(self.tlist_of_foo))
-            for iter119 in self.tlist_of_foo:
-                iter119.write(oprot)
+            for iter138 in self.tlist_of_foo:
+                iter138.write(oprot)
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.tfoo is not None:
@@ -499,31 +536,31 @@ class Bar(object):
         if self.tlist_of_maps2int is not None:
             oprot.writeFieldBegin('tlist_of_maps2int', TType.LIST, 16)
             oprot.writeListBegin(TType.MAP, len(self.tlist_of_maps2int))
-            for iter120 in self.tlist_of_maps2int:
-                oprot.writeMapBegin(TType.STRING, TType.I32, len(iter120))
-                for kiter121, viter122 in iter120.items():
-                    oprot.writeString(kiter121.encode('utf-8') if sys.version_info[0] == 2 else kiter121)
-                    oprot.writeI32(viter122)
+            for iter139 in self.tlist_of_maps2int:
+                oprot.writeMapBegin(TType.STRING, TType.I32, len(iter139))
+                for kiter140, viter141 in iter139.items():
+                    oprot.writeString(kiter140.encode('utf-8') if sys.version_info[0] == 2 else kiter140)
+                    oprot.writeI32(viter141)
                 oprot.writeMapEnd()
             oprot.writeListEnd()
             oprot.writeFieldEnd()
         if self.tmap_of_str2foolist is not None:
             oprot.writeFieldBegin('tmap_of_str2foolist', TType.MAP, 17)
             oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.tmap_of_str2foolist))
-            for kiter123, viter124 in self.tmap_of_str2foolist.items():
-                oprot.writeString(kiter123.encode('utf-8') if sys.version_info[0] == 2 else kiter123)
-                oprot.writeListBegin(TType.STRUCT, len(viter124))
-                for iter125 in viter124:
-                    iter125.write(oprot)
+            for kiter142, viter143 in self.tmap_of_str2foolist.items():
+                oprot.writeString(kiter142.encode('utf-8') if sys.version_info[0] == 2 else kiter142)
+                oprot.writeListBegin(TType.STRUCT, len(viter143))
+                for iter144 in viter143:
+                    iter144.write(oprot)
                 oprot.writeListEnd()
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.tmap_of_int2foo is not None:
             oprot.writeFieldBegin('tmap_of_int2foo', TType.MAP, 18)
             oprot.writeMapBegin(TType.I32, TType.STRUCT, len(self.tmap_of_int2foo))
-            for kiter126, viter127 in self.tmap_of_int2foo.items():
-                oprot.writeI32(kiter126)
-                viter127.write(oprot)
+            for kiter145, viter146 in self.tmap_of_int2foo.items():
+                oprot.writeI32(kiter145)
+                viter146.write(oprot)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.tbinary is not None:
@@ -533,17 +570,39 @@ class Bar(object):
         if self.tmap_of_bool2str is not None:
             oprot.writeFieldBegin('tmap_of_bool2str', TType.MAP, 20)
             oprot.writeMapBegin(TType.BOOL, TType.STRING, len(self.tmap_of_bool2str))
-            for kiter128, viter129 in self.tmap_of_bool2str.items():
-                oprot.writeBool(kiter128)
-                oprot.writeString(viter129.encode('utf-8') if sys.version_info[0] == 2 else viter129)
+            for kiter147, viter148 in self.tmap_of_bool2str.items():
+                oprot.writeBool(kiter147)
+                oprot.writeString(viter148.encode('utf-8') if sys.version_info[0] == 2 else viter148)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         if self.tmap_of_bool2int is not None:
             oprot.writeFieldBegin('tmap_of_bool2int', TType.MAP, 21)
             oprot.writeMapBegin(TType.BOOL, TType.I16, len(self.tmap_of_bool2int))
-            for kiter130, viter131 in self.tmap_of_bool2int.items():
-                oprot.writeBool(kiter130)
-                oprot.writeI16(viter131)
+            for kiter149, viter150 in self.tmap_of_bool2int.items():
+                oprot.writeBool(kiter149)
+                oprot.writeI16(viter150)
+            oprot.writeMapEnd()
+            oprot.writeFieldEnd()
+        if self.tlist_of_binary is not None:
+            oprot.writeFieldBegin('tlist_of_binary', TType.LIST, 22)
+            oprot.writeListBegin(TType.STRING, len(self.tlist_of_binary))
+            for iter151 in self.tlist_of_binary:
+                oprot.writeBinary(iter151)
+            oprot.writeListEnd()
+            oprot.writeFieldEnd()
+        if self.tset_of_binary is not None:
+            oprot.writeFieldBegin('tset_of_binary', TType.SET, 23)
+            oprot.writeSetBegin(TType.STRING, len(self.tset_of_binary))
+            for iter152 in self.tset_of_binary:
+                oprot.writeBinary(iter152)
+            oprot.writeSetEnd()
+            oprot.writeFieldEnd()
+        if self.tbin2bin is not None:
+            oprot.writeFieldBegin('tbin2bin', TType.MAP, 24)
+            oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.tbin2bin))
+            for kiter153, viter154 in self.tbin2bin.items():
+                oprot.writeBinary(kiter153)
+                oprot.writeBinary(viter154)
             oprot.writeMapEnd()
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -596,6 +655,9 @@ Bar.thrift_spec = (
     (19, TType.STRING, 'tbinary', 'BINARY', None, ),  # 19
     (20, TType.MAP, 'tmap_of_bool2str', (TType.BOOL, None, TType.STRING, 'UTF8', False), None, ),  # 20
     (21, TType.MAP, 'tmap_of_bool2int', (TType.BOOL, None, TType.I16, None, False), None, ),  # 21
+    (22, TType.LIST, 'tlist_of_binary', (TType.STRING, 'BINARY', False), None, ),  # 22
+    (23, TType.SET, 'tset_of_binary', (TType.STRING, 'BINARY', False), None, ),  # 23
+    (24, TType.MAP, 'tbin2bin', (TType.STRING, 'BINARY', TType.STRING, 'BINARY', False), None, ),  # 24
 )
 fix_spec(all_structs)
 del all_structs
