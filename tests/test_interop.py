@@ -5,12 +5,14 @@ import time
 from multiprocessing import Process
 
 import pytest
+import six
 import thriftpy2
 from thrift.protocol import TBinaryProtocol as T_TBinary_Protocol, TCompactProtocol as T_TCompactProtocol, \
     TJSONProtocol as T_TJSONProtocol
 from thrift.server import TServer
 from thrift.transport import TSocket, TTransport
-from thriftpy2.protocol import TBinaryProtocolFactory, TApacheJSONProtocolFactory, TCompactProtocolFactory
+from thriftpy2.protocol import TApacheJSONProtocolFactory, TCompactProtocolFactory
+from thriftpy2.protocol.binary import TBinaryProtocolFactory
 
 from spec import BarService
 from spec.ttypes import Foo, Bar
@@ -20,6 +22,21 @@ logging.basicConfig(level=logging.DEBUG)
 test_thrift = thriftpy2.load(os.path.dirname(os.path.realpath(__file__)) + "/spec.thrift")
 tp2_Bar = test_thrift.Bar
 tp2_Foo = test_thrift.Foo
+
+
+def recursive_vars(obj):
+    if isinstance(obj, six.string_types):
+        return six.ensure_str(obj)
+    if isinstance(obj, six.binary_type):
+        return six.ensure_binary(obj)
+    if isinstance(obj, (int, float, bool)):
+        return obj
+    if isinstance(obj, dict):
+        return {k: recursive_vars(v) for k, v in obj.items()}
+    if isinstance(obj, (list, set)):
+        return [recursive_vars(v) for v in obj]
+    if hasattr(obj, '__dict__'):
+        return recursive_vars(vars(obj))
 
 
 def make_data(bar_cls, foo_cls):
@@ -104,7 +121,7 @@ def thrift_client(**kwargs):
 
     result = client.test(t_object)
     transport.close()
-    assert result.tbinary == t_object.tbinary
+    assert recursive_vars(result) == recursive_vars(t_object)
 
 
 def thriftpy2_server(**kwargs):
@@ -112,7 +129,8 @@ def thriftpy2_server(**kwargs):
     server = make_server(
         service=test_thrift.BarService,
         handler=Handler(),
-        proto_factory=kwargs['tp2_prot']()
+        host='localhost',
+        proto_factory=kwargs['tp2_prot'](),
     )
     server.serve()
 
@@ -121,7 +139,7 @@ def thriftpy2_client(**kwargs):
     from thriftpy2.rpc import make_client
     client = make_client(test_thrift.BarService, proto_factory=kwargs['tp2_prot']())
     result = client.test(tp2_object)
-    assert result.tbinary == tp2_object.tbinary
+    assert recursive_vars(result) == recursive_vars(tp2_object)
 
 
 @pytest.mark.parametrize('protos', protocols)
@@ -134,7 +152,7 @@ def test_client_server(protos, server_fn, client_fn):
     }
     proc = Process(target=server_fn, kwargs=kw)
     proc.start()
-    time.sleep(0.1)
+    time.sleep(1)
     try:
         client_fn(**kw)
     finally:
