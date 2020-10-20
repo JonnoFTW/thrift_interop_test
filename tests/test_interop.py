@@ -6,12 +6,16 @@ from multiprocessing import Process
 
 import pytest
 import six
-import thriftpy2
-from thrift.protocol import TBinaryProtocol as T_TBinary_Protocol, TCompactProtocol as T_TCompactProtocol, \
-    TJSONProtocol as T_TJSONProtocol
-from thrift.server import TServer
+
+from thrift.protocol.TBinaryProtocol import TBinaryProtocolFactory as T_TBinaryProtocolFactory
+from thrift.protocol.TCompactProtocol import TCompactProtocolFactory as T_TCompactProtocolFactory
+from thrift.protocol.TJSONProtocol import TJSONProtocolFactory as T_TJSONProtocolFactory
 from thrift.transport import TSocket, TTransport
+from thrift.server import TServer
+
+import thriftpy2
 from thriftpy2.protocol import TApacheJSONProtocolFactory, TCompactProtocolFactory
+from thriftpy2.transport.buffered import TBufferedTransportFactory
 from thriftpy2.protocol.binary import TBinaryProtocolFactory
 
 from spec import BarService
@@ -95,24 +99,25 @@ class Handler:
 
 
 protocols = [
-    (TApacheJSONProtocolFactory, T_TJSONProtocol.TJSONProtocolFactory),
-    (TBinaryProtocolFactory, T_TBinary_Protocol.TBinaryProtocolFactory),
-    (TCompactProtocolFactory, T_TCompactProtocol.TCompactProtocolFactory),
+    (TApacheJSONProtocolFactory, T_TJSONProtocolFactory),
+    (TBinaryProtocolFactory, T_TBinaryProtocolFactory),
+    (TCompactProtocolFactory, T_TCompactProtocolFactory),
 ]
 
 
 def thrift_server(**kwargs):
     handler = Handler()
     processor = BarService.Processor(handler)
-    transport = TSocket.TServerSocket(socket_family=socket.AF_INET)
+    transport = TSocket.TServerSocket(host='localhost', socket_family=socket.AF_INET)
     tfactory = TTransport.TBufferedTransportFactory()
     pfactory = kwargs['th_prot']()
     server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
+    print("Starting thrift server with", kwargs['th_prot'])
     server.serve()
 
 
 def thrift_client(**kwargs):
-    transport = TSocket.TSocket(socket_family=socket.AF_INET)
+    transport = TSocket.TSocket('localhost', socket_family=socket.AF_INET)
     transport = TTransport.TBufferedTransport(transport)
 
     protocol = kwargs['th_prot']().getProtocol(transport)
@@ -121,7 +126,10 @@ def thrift_client(**kwargs):
 
     result = client.test(t_object)
     transport.close()
+    print("\n", result)
     assert recursive_vars(result) == recursive_vars(t_object)
+    assert result.tbinary is not None
+    assert str(result.tbool) == "False"
 
 
 def thriftpy2_server(**kwargs):
@@ -131,15 +139,25 @@ def thriftpy2_server(**kwargs):
         handler=Handler(),
         host='localhost',
         proto_factory=kwargs['tp2_prot'](),
+        trans_factory=TBufferedTransportFactory()
     )
+    print("Starting thriftpy2 server with", kwargs['tp2_prot'])
     server.serve()
 
 
 def thriftpy2_client(**kwargs):
     from thriftpy2.rpc import make_client
-    client = make_client(test_thrift.BarService, proto_factory=kwargs['tp2_prot']())
+    client = make_client(
+        test_thrift.BarService,
+        'localhost',
+        proto_factory=kwargs['tp2_prot'](),
+        trans_factory=TBufferedTransportFactory()
+    )
     result = client.test(tp2_object)
+    print("\n", result)
     assert recursive_vars(result) == recursive_vars(tp2_object)
+    assert result.tbinary is not None
+    assert str(result.tbool) == "False"
 
 
 @pytest.mark.parametrize('protos', protocols)
@@ -152,9 +170,21 @@ def test_client_server(protos, server_fn, client_fn):
     }
     proc = Process(target=server_fn, kwargs=kw)
     proc.start()
-    time.sleep(1)
+    time.sleep(0.1)
     try:
         client_fn(**kw)
     finally:
         pass
         proc.kill()
+
+
+if __name__ == "__main__":
+    import sys
+    tp2_prot = TBinaryProtocolFactory
+    th_prot = T_TBinaryProtocolFactory
+    {
+        'tp2': lambda: thriftpy2_server(tp2_prot=tp2_prot),
+        'th': lambda: thrift_server(th_prot=th_prot),
+        'tp2_c': lambda: thriftpy2_client(tp2_prot=tp2_prot),
+        'th_c': lambda: thrift_client(th_prot=th_prot)
+    }.get(sys.argv[1], lambda: print("Invalid arg"))()
