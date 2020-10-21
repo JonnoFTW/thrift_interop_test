@@ -142,7 +142,8 @@ def thrift_client(**kwargs):
 
 def thriftpy2_server(**kwargs):
     from thriftpy2.rpc import make_server
-    trans_factory = TBufferedTransportFactory if kwargs['tp2_prot'] == TBinaryProtocolFactory else TCyBufferedTransportFactory
+    trans_factory = TBufferedTransportFactory if\
+        kwargs['tp2_prot'] == TBinaryProtocolFactory else TCyBufferedTransportFactory
     server = make_server(
         service=test_thrift.BarService,
         handler=Handler(),
@@ -156,8 +157,8 @@ def thriftpy2_server(**kwargs):
 
 def thriftpy2_client(**kwargs):
     from thriftpy2.rpc import make_client
-    trans_factory = TBufferedTransportFactory if kwargs[
-                                                     'tp2_prot'] == TBinaryProtocolFactory else TCyBufferedTransportFactory
+    trans_factory = TBufferedTransportFactory if \
+        kwargs['tp2_prot'] == TBinaryProtocolFactory else TCyBufferedTransportFactory
     client = make_client(
         test_thrift.BarService,
         'localhost',
@@ -193,7 +194,7 @@ def test_client_server(protos, server_fn, client_fn):
 
 if __name__ == "__main__":
     import sys
-    tp2_prot, th_prot = protocols[2]
+    tp2_prot, th_prot = protocols[0]
     {
         'tp2': lambda: thriftpy2_server(tp2_prot=tp2_prot),
         'th': lambda: thrift_server(th_prot=th_prot),
