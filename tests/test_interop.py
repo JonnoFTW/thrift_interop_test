@@ -185,16 +185,15 @@ def test_client_server(protos, server_fn, client_fn):
     try:
         client_fn(**kw)
     finally:
-        pass
         proc.kill()
+    # sometimes a test fails because the proc
+    # of a previous test takes a while to die
+    time.sleep(0.05)
 
 
 if __name__ == "__main__":
     import sys
-    # tp2_prot = TCyBinaryProtocolFactory
-    # th_prot = T_TBinaryProtocolFactory
-    tp2_prot = TApacheJSONProtocolFactory
-    th_prot = T_TJSONProtocolFactory
+    tp2_prot, th_prot = protocols[2]
     {
         'tp2': lambda: thriftpy2_server(tp2_prot=tp2_prot),
         'th': lambda: thrift_server(th_prot=th_prot),
